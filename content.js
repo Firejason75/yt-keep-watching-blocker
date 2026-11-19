@@ -31,8 +31,15 @@
   );
   const userIsIdle = () => Date.now() - lastInput > IDLE_MS;
 
-  const isVisible = (el) =>
-    !!el && el.offsetParent !== null && getComputedStyle(el).visibility !== "hidden";
+  // Note: offsetParent is null for position:fixed elements (which popups often are),
+  // so use checkVisibility / client rects instead.
+  const isVisible = (el) => {
+    if (!el || !el.isConnected) return false;
+    if (typeof el.checkVisibility === "function") {
+      return el.checkVisibility({ visibilityProperty: true, opacityProperty: true });
+    }
+    return el.getClientRects().length > 0 && getComputedStyle(el).visibility !== "hidden";
+  };
 
   const resumeVideo = () => {
     const v = document.querySelector("video");
